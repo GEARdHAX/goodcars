@@ -1,0 +1,27 @@
+{
+  "name": "goodcars",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/GEARdHAX/goodcars#readme",
+  "bugs": {
+    "url": "https://github.com/GEARdHAX/goodcars/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GEARdHAX/goodcars.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+"scripts": {
+  "start": "node server/server.js",
+  "server": "npm start --prefix server",
+  "client": "npm run dev --prefix client",
+  "dev": "concurrently \"npm run server\" \"npm run client\"",
+  "test": "echo \"Error: no test specified\" && exit 1"
+},
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

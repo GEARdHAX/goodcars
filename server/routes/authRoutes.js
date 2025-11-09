@@ -1,25 +1,63 @@
 const express = require('express');
 const router = express.Router();
 const passport = require('passport');
-const { registerUser, registerAgent, loginUser } = require('../controllers/authController');
+const jwt = require('jsonwebtoken');
+const {
+    sendOTP,
+    verifyOTP,
+    updateDetails,
+} = require('../controllers/authController');
 
-// @desc    Register a normal user
-// @route   POST /api/auth/register-user
-router.post('/register-user', registerUser);
+// --- OTP Flow ---
+// @desc    Send OTP to mobile
+// @route   POST /api/auth/send-otp
+router.post('/send-otp', sendOTP);
 
-// @desc    Register an agent
-// @route   POST /api/auth/register-agent
-router.post('/register-agent', registerAgent);
+// @desc    Verify OTP and log user in
+// @route   POST /api/auth/verify-otp
+router.post('/verify-otp', verifyOTP);
 
-// @desc    Login user/agent
-// @route   POST /api/auth/login
-// @access  Public
-router.post(
-    '/login',
-    // Use 'local' strategy to authenticate
-    passport.authenticate('local', { session: false, failWithError: true }),
-    // If auth succeeds, the loginUser controller runs
-    loginUser
+// --- Google OAuth Flow ---
+// @desc    Initiate Google Sign-In
+// @route   GET /api/auth/google
+router.get(
+    '/google',
+    passport.authenticate('google', { scope: ['profile', 'email'] })
+);
+
+// @desc    Google OAuth callback
+// @route   GET /api/auth/google/callback
+router.get(
+    '/google/callback',
+    passport.authenticate('google', {
+        session: false, // We are using JWT, not sessions
+        failureRedirect: `${process.env.CLIENT_URL}/login-failed`, // Redirect on frontend
+    }),
+    (req, res) => {
+        // User is authenticated by Passport, req.user is populated.
+        // Now, we manually create and send the JWT.
+        const payload = {
+            id: req.user.id,
+            fullName: req.user.fullName,
+            email: req.user.email,
+        };
+        const token = jwt.sign(payload, process.env.JWT_SECRET, {
+            expiresIn: '1d',
+        });
+
+        // Redirect back to the React app with the token
+        // The frontend will have to parse this token from the URL
+        res.redirect(`${process.env.CLIENT_URL}/auth-success?token=${token}`);
+    }
+);
+
+// --- Profile Update ---
+// @desc    Update user details (e.g., add fullName after login)
+// @route   PUT /api/auth/update-details
+router.put(
+    '/update-details',
+    passport.authenticate('jwt', { session: false }), // Protect this route
+    updateDetails
 );
 
 module.exports = router;
