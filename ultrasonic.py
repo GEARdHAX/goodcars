@@ -1,4 +1,3 @@
-```python
 import time
 import RPi.GPIO as GPIO
 
@@ -36,4 +35,3 @@ while True:
         print("Distance:", distance - 0.5, "cm")
     else:
         print("Out of range")
-```
